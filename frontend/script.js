@@ -4,9 +4,7 @@ const getBackendURL = () => {
         return 'http://localhost:5000/api';
     }
 
-    const protocol = window.location.protocol;
-    const hostname = window.location.hostname;
-    return `${protocol}//${hostname}:8080/api`;
+    return `${window.location.origin}/api`;
 };
 
 const API_URL = window.__BACKEND_URL || getBackendURL();
