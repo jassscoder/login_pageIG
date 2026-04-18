@@ -1,55 +1,104 @@
 // ============== API Configuration ==============
-// Automatically detect backend URL based on environment
 const getBackendURL = () => {
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         return 'http://localhost:5000/api';
     }
-    // For Railway: use the backend service URL or your custom domain
+
     const protocol = window.location.protocol;
     const hostname = window.location.hostname;
-    // Railway will automatically set the BACKEND_URL if deployed together
-    // For now, point to the same host on the default ports
     return `${protocol}//${hostname}:8080/api`;
 };
 
 const API_URL = window.__BACKEND_URL || getBackendURL();
 
-// Immediately apply saved theme before page renders
-const savedTheme = localStorage.getItem('theme') || 'light';
-if (savedTheme === 'dark') {
-    document.documentElement.style.colorScheme = 'dark';
-    document.body.classList.add('dark-mode');
-}
+const getThemeElements = () => ({
+    sunIcon: document.getElementById('sunIcon'),
+    moonIcon: document.getElementById('moonIcon')
+});
 
-document.addEventListener('DOMContentLoaded', () => {
-    // ============== THEME TOGGLE ==============
-    const themeToggle = document.getElementById('themeToggle');
-    const sunIcon = document.getElementById('sunIcon');
-    const moonIcon = document.getElementById('moonIcon');
+const applyTheme = (theme) => {
+    const isDark = theme === 'dark';
+    document.body.classList.toggle('dark-mode', isDark);
+    document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
 
-    // Sync icons with current theme
-    const isDarkNow = document.body.classList.contains('dark-mode');
+    const { sunIcon, moonIcon } = getThemeElements();
     if (sunIcon && moonIcon) {
-        sunIcon.style.display = isDarkNow ? 'none' : 'block';
-        moonIcon.style.display = isDarkNow ? 'block' : 'none';
+        sunIcon.style.display = isDark ? 'none' : 'block';
+        moonIcon.style.display = isDark ? 'block' : 'none';
+    }
+};
+
+const saveThemePreference = async (theme) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        return;
     }
 
+    try {
+        await fetch(`${API_URL}/auth/theme`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ theme })
+        });
+    } catch (error) {
+        // Keep UI responsive even if backend theme sync fails.
+        console.error('Failed to sync theme preference:', error);
+    }
+};
+
+const setTheme = (theme, syncToServer = false) => {
+    applyTheme(theme);
+    localStorage.setItem('theme', theme);
+    if (syncToServer) {
+        saveThemePreference(theme);
+    }
+};
+
+const validateEmailOrUsername = (value) => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+        return false;
+    }
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed) || trimmed.length >= 3;
+};
+
+window.togglePassword = function togglePassword() {
+    const passwordInput = document.getElementById('password');
+    if (!passwordInput) {
+        return;
+    }
+    passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
+};
+
+window.openSignupModal = function openSignupModal() {
+    const signupModal = document.getElementById('signupModal');
+    if (signupModal) {
+        signupModal.classList.remove('hidden');
+    }
+};
+
+window.closeSignupModal = function closeSignupModal() {
+    const signupModal = document.getElementById('signupModal');
+    if (signupModal) {
+        signupModal.classList.add('hidden');
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const initialTheme = localStorage.getItem('theme') || 'light';
+    applyTheme(initialTheme);
+
+    const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
         themeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            
-            if (sunIcon && moonIcon) {
-                sunIcon.style.display = isDark ? 'none' : 'block';
-                moonIcon.style.display = isDark ? 'block' : 'none';
-            }
-            
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+            const nextTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
+            setTheme(nextTheme, true);
         });
     }
 
-    // ============== LOGIN FORM ==============
     const loginForm = document.getElementById('loginForm');
     const emailInput = document.getElementById('emailUsername');
     const passwordInput = document.getElementById('password');
@@ -58,66 +107,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const formError = document.getElementById('formError');
     const formSuccess = document.getElementById('formSuccess');
 
-    function validateEmail(email) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length >= 3;
-    }
+    const clearErrors = () => {
+        [emailError, passwordError, formError].forEach((el) => {
+            if (el) {
+                el.textContent = '';
+                el.classList.remove('show');
+            }
+        });
+    };
 
-    function showError(input, errorEl, msg) {
-        if (input && input.parentElement) {
-            input.parentElement.classList.add('error');
+    const showError = (el, message) => {
+        if (el) {
+            el.textContent = message;
+            el.classList.add('show');
         }
-        if (errorEl) {
-            errorEl.textContent = msg;
-            errorEl.classList.add('show');
-        }
-    }
-
-    function clearErrors() {
-        if (emailError) {
-            emailError.textContent = '';
-            emailError.classList.remove('show');
-        }
-        if (passwordError) {
-            passwordError.textContent = '';
-            passwordError.classList.remove('show');
-        }
-        if (formError) {
-            formError.textContent = '';
-            formError.classList.remove('show');
-        }
-        if (emailInput && emailInput.parentElement) {
-            emailInput.parentElement.classList.remove('error');
-        }
-        if (passwordInput && passwordInput.parentElement) {
-            passwordInput.parentElement.classList.remove('error');
-        }
-    }
+    };
 
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             clearErrors();
 
-            const email = emailInput ? emailInput.value.trim() : '';
-            const password = passwordInput ? passwordInput.value.trim() : '';
+            const emailUsername = emailInput ? emailInput.value.trim() : '';
+            const password = passwordInput ? passwordInput.value : '';
 
-            if (!email) {
-                showError(emailInput, emailError, 'Email or username is required');
+            if (!validateEmailOrUsername(emailUsername)) {
+                showError(emailError, 'Enter a valid email or username');
                 return;
             }
 
-            if (!validateEmail(email)) {
-                showError(emailInput, emailError, 'Invalid email or username');
-                return;
-            }
-
-            if (!password) {
-                showError(passwordInput, passwordError, 'Password is required');
-                return;
-            }
-
-            if (password.length < 6) {
-                showError(passwordInput, passwordError, 'Password must be at least 6 characters');
+            if (!password || password.length < 6) {
+                showError(passwordError, 'Password must be at least 6 characters');
                 return;
             }
 
@@ -125,61 +145,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch(`${API_URL}/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password }),
+                    body: JSON.stringify({ emailUsername, password })
                 });
 
                 const data = await response.json();
 
                 if (!response.ok) {
-                    if (formError) {
-                        formError.textContent = data.message || 'Login failed';
-                        formError.classList.add('show');
-                    }
+                    showError(formError, data.message || 'Login failed');
                     return;
                 }
 
                 localStorage.setItem('token', data.token);
+
+                const serverTheme = data.user && data.user.preferredTheme;
+                if (serverTheme === 'dark' || serverTheme === 'light') {
+                    setTheme(serverTheme, false);
+                }
+
                 if (formSuccess) {
                     formSuccess.textContent = 'Login successful! Redirecting...';
                     formSuccess.classList.add('show');
                 }
-                
+
                 setTimeout(() => {
                     window.location.href = '/dashboard';
-                }, 2000);
-
+                }, 1200);
             } catch (error) {
-                if (formError) {
-                    formError.textContent = 'Connection error. Please try again.';
-                    formError.classList.add('show');
-                }
+                console.error('Login error:', error);
+                showError(formError, 'Connection error. Please try again.');
             }
         });
     }
 
-    // ============== PASSWORD TOGGLE ==============
-    window.togglePassword = function() {
-        if (passwordInput) {
-            const type = passwordInput.type === 'password' ? 'text' : 'password';
-            passwordInput.type = type;
-        }
-    }
-
-    // ============== SIGNUP MODAL ==============
     const signupLink = document.getElementById('signupLink');
     const signupModal = document.getElementById('signupModal');
-
-    window.openSignupModal = function() {
-        if (signupModal) {
-            signupModal.classList.remove('hidden');
-        }
-    }
-
-    window.closeSignupModal = function() {
-        if (signupModal) {
-            signupModal.classList.add('hidden');
-        }
-    }
 
     if (signupLink) {
         signupLink.addEventListener('click', (e) => {
@@ -188,170 +187,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Close modal when clicking outside
     if (signupModal) {
-        document.addEventListener('click', (e) => {
+        signupModal.addEventListener('click', (e) => {
             if (e.target === signupModal) {
                 window.closeSignupModal();
             }
         });
-    }
-});
-
-        } else {
-            document.getElementById('formError').textContent = data.message || 'Login failed';
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        document.getElementById('formError').textContent = 'Connection error. Please try again.';
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Log in';
-    }
-});
-
-// Signup Form Handler
-signupForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const email = document.getElementById('signupEmail').value.trim();
-    const fullName = document.getElementById('signupUsername').value.trim();
-    const username = document.getElementById('signupUser').value.trim();
-    const password = document.getElementById('signupPassword').value;
-    
-    // Clear previous errors
-    document.querySelectorAll('#signupForm .error-message').forEach(el => {
-        el.textContent = '';
-    });
-    
-    // Validation
-    let hasError = false;
-    
-    if (!email) {
-        document.querySelectorAll('#signupForm .error-message')[0].textContent = 'Email is required';
-        hasError = true;
-    } else if (!validateEmail(email)) {
-        document.querySelectorAll('#signupForm .error-message')[0].textContent = 'Invalid email format';
-        hasError = true;
-    }
-    
-    if (!fullName) {
-        document.querySelectorAll('#signupForm .error-message')[1].textContent = 'Full name is required';
-        hasError = true;
-    }
-    
-    if (!username) {
-        document.querySelectorAll('#signupForm .error-message')[2].textContent = 'Username is required';
-        hasError = true;
-    } else if (username.length < 3) {
-        document.querySelectorAll('#signupForm .error-message')[2].textContent = 'Username must be at least 3 characters';
-        hasError = true;
-    }
-    
-    if (!password) {
-        document.querySelectorAll('#signupForm .error-message')[3].textContent = 'Password is required';
-        hasError = true;
-    } else if (password.length < 6) {
-        document.querySelectorAll('#signupForm .error-message')[3].textContent = 'Password must be at least 6 characters';
-        hasError = true;
-    }
-    
-    if (hasError) return;
-    
-    // Disable button during submission
-    const submitBtn = signupForm.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Creating account...';
-    
-    try {
-        const response = await fetch(`${API_URL}/auth/register`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                email,
-                fullName,
-                username,
-                password
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            showToast('Account created! Redirecting to login...');
-            setTimeout(() => {
-                closeSignupModal();
-                loginForm.reset();
-                document.getElementById('emailUsername').focus();
-            }, 1500);
-        } else {
-            document.getElementById('signupFormError').textContent = data.message || 'Registration failed';
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        document.getElementById('signupFormError').textContent = 'Connection error. Please try again.';
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Sign up';
-    }
-});
-
-// Helper Functions
-function openSignupModal() {
-    signupModal.classList.remove('hidden');
-}
-
-function closeSignupModal() {
-    signupModal.classList.add('hidden');
-    signupForm.reset();
-    document.querySelectorAll('#signupForm .error-message').forEach(el => {
-        el.textContent = '';
-    });
-}
-
-function validateEmail(email) {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-}
-
-function showToast(message) {
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
-}
-
-// Toggle Password Visibility
-function togglePassword() {
-    const passwordInput = document.getElementById('password');
-    if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-    } else {
-        passwordInput.type = 'password';
-    }
-}
-
-// Real-time Validation
-document.getElementById('emailUsername').addEventListener('blur', function() {
-    if (!this.value.trim()) {
-        document.getElementById('emailError').textContent = 'This field is required';
-    } else {
-        document.getElementById('emailError').textContent = '';
-    }
-});
-
-document.getElementById('password').addEventListener('blur', function() {
-    if (!this.value) {
-        document.getElementById('passwordError').textContent = 'Password is required';
-    } else if (this.value.length < 6) {
-        document.getElementById('passwordError').textContent = 'Password must be at least 6 characters';
-    } else {
-        document.getElementById('passwordError').textContent = '';
     }
 });

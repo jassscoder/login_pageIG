@@ -99,7 +99,8 @@ exports.login = async (req, res) => {
                 id: user.id,
                 email: user.email,
                 username: user.username,
-                fullName: user.full_name
+                fullName: user.full_name,
+                preferredTheme: user.preferred_theme || 'light'
             }
         });
     } catch (error) {
@@ -119,7 +120,7 @@ exports.getMe = async (req, res) => {
         const connection = await pool.getConnection();
 
         const [users] = await connection.execute(
-            'SELECT id, email, username, full_name, created_at FROM users WHERE id = ?',
+            'SELECT id, email, username, full_name, preferred_theme, created_at FROM users WHERE id = ?',
             [req.userId]
         );
 
@@ -129,10 +130,43 @@ exports.getMe = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        res.json({ user: users[0] });
+        const user = users[0];
+        res.json({
+            user: {
+                id: user.id,
+                email: user.email,
+                username: user.username,
+                fullName: user.full_name,
+                preferredTheme: user.preferred_theme || 'light',
+                createdAt: user.created_at
+            }
+        });
     } catch (error) {
         console.error('Error fetching user:', error);
         res.status(500).json({ message: 'Error fetching user' });
+    }
+};
+
+// Update current user's theme preference
+exports.updateTheme = async (req, res) => {
+    try {
+        const { theme } = req.body;
+
+        if (theme !== 'light' && theme !== 'dark') {
+            return res.status(400).json({ message: 'Theme must be "light" or "dark"' });
+        }
+
+        const connection = await pool.getConnection();
+        await connection.execute(
+            'UPDATE users SET preferred_theme = ? WHERE id = ?',
+            [theme, req.userId]
+        );
+        connection.release();
+
+        res.json({ message: 'Theme updated', preferredTheme: theme });
+    } catch (error) {
+        console.error('Update theme error:', error);
+        res.status(500).json({ message: 'Failed to update theme' });
     }
 };
 

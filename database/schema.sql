@@ -7,6 +7,7 @@ CREATE TABLE users (
     username VARCHAR(255) UNIQUE NOT NULL,
     full_name VARCHAR(255) NOT NULL,
     password VARCHAR(255) NOT NULL,
+    preferred_theme ENUM('light', 'dark') NOT NULL DEFAULT 'light',
     profile_picture VARCHAR(500),
     bio TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
