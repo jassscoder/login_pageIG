@@ -1,3 +1,19 @@
+// ============== API Configuration ==============
+// Automatically detect backend URL based on environment
+const getBackendURL = () => {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return 'http://localhost:5000/api';
+    }
+    // For Railway: use the backend service URL or your custom domain
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname;
+    // Railway will automatically set the BACKEND_URL if deployed together
+    // For now, point to the same host on the default ports
+    return `${protocol}//${hostname}:8080/api`;
+};
+
+const API_URL = window.__BACKEND_URL || getBackendURL();
+
 // Immediately apply saved theme before page renders
 const savedTheme = localStorage.getItem('theme') || 'light';
 if (savedTheme === 'dark') {
@@ -106,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             try {
-                const response = await fetch('http://localhost:5000/api/auth/login', {
+                const response = await fetch(`${API_URL}/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password }),
@@ -181,323 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-// Configuration
-const API_URL = 'http://localhost:5000/api';
 
-/* ============ THEME TOGGLE ============ */
-const themeToggle = document.getElementById('themeToggle');
-const sunIcon = document.getElementById('sunIcon');
-const moonIcon = document.getElementById('moonIcon');
-
-// Initialize theme from localStorage
-const savedTheme = localStorage.getItem('theme') || 'light';
-if (savedTheme === 'dark') {
-    document.body.classList.add('dark-mode');
-    sunIcon.style.display = 'none';
-    moonIcon.style.display = 'block';
-}
-
-themeToggle.addEventListener('click', () => {
-    document.body.classList.toggle('dark-mode');
-    const isDarkMode = document.body.classList.contains('dark-mode');
-    
-    sunIcon.style.display = isDarkMode ? 'none' : 'block';
-    moonIcon.style.display = isDarkMode ? 'block' : 'none';
-    
-    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-});
-
-/* ============ CAROUSEL FUNCTIONALITY ============ */
-const slides = document.querySelectorAll('.slide');
-const indicators = document.querySelectorAll('.indicator');
-let currentSlide = 0;
-const slideInterval = 4000;
-
-function showSlide(index) {
-    slides.forEach((slide, i) => {
-        slide.classList.toggle('active', i === index);
-    });
-    indicators.forEach((indicator, i) => {
-        indicator.classList.toggle('active', i === index);
-    });
-}
-
-function nextSlide() {
-    currentSlide = (currentSlide + 1) % slides.length;
-    showSlide(currentSlide);
-}
-
-// Auto-advance carousel
-if (slides.length > 0) {
-    setInterval(nextSlide, slideInterval);
-}
-
-// Manual indicator clicks
-indicators.forEach((indicator, index) => {
-    indicator.addEventListener('click', () => {
-        currentSlide = index;
-        showSlide(currentSlide);
-    });
-});
-
-/* ============ FORM VALIDATION ============ */
-const loginForm = document.getElementById('loginForm');
-const emailInput = document.getElementById('emailUsername');
-const passwordInput = document.getElementById('password');
-const emailError = document.getElementById('emailError');
-const passwordError = document.getElementById('passwordError');
-const formError = document.getElementById('formError');
-const formSuccess = document.getElementById('formSuccess');
-
-function validateEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email) || email.length >= 3;
-}
-
-function clearErrors() {
-    emailError.textContent = '';
-    passwordError.textContent = '';
-    formError.textContent = '';
-    emailInput.parentElement.classList.remove('error');
-    passwordInput.parentElement.classList.remove('error');
-}
-
-function showError(input, errorElement, message) {
-    input.parentElement.classList.add('error');
-    errorElement.textContent = message;
-}
-
-if (loginForm) {
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        clearErrors();
-
-        const emailUsername = emailInput.value.trim();
-        const password = passwordInput.value.trim();
-
-        if (!emailUsername) {
-            showError(emailInput, emailError, 'Username, email or phone is required');
-            return;
-        }
-
-        if (!validateEmail(emailUsername)) {
-            showError(emailInput, emailError, 'Invalid email or username');
-            return;
-        }
-
-        if (!password) {
-            showError(passwordInput, passwordError, 'Password is required');
-            return;
-        }
-
-        if (password.length < 6) {
-            showError(passwordInput, passwordError, 'Password must be at least 6 characters');
-            return;
-        }
-
-        try {
-            const response = await fetch('http://localhost:5000/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: emailUsername,
-                    password: password,
-                }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                formError.textContent = data.message || 'Login failed. Please try again.';
-                return;
-            }
-
-            // Successful login
-            localStorage.setItem('token', data.token);
-            formSuccess.textContent = 'Login successful! Redirecting...';
-            formSuccess.classList.add('show');
-            
-            setTimeout(() => {
-                window.location.href = '/dashboard';
-            }, 2000);
-
-        } catch (error) {
-            formError.textContent = 'Connection error. Please try again.';
-        }
-    });
-}
-
-/* ============ PASSWORD VISIBILITY TOGGLE ============ */
-function togglePassword() {
-    const type = passwordInput.type === 'password' ? 'text' : 'password';
-    passwordInput.type = type;
-}
-
-/* ============ SIGNUP MODAL ============ */
-const signupLink = document.getElementById('signupLink');
-const createAccountBtn = document.getElementById('createAccountBtn');
-const signupModal = document.getElementById('signupModal');
-const closeBtn = document.querySelector('.close-btn');
-
-function openSignupModal() {
-    if (signupModal) {
-        signupModal.classList.remove('hidden');
-    }
-}
-
-function closeSignupModal() {
-    if (signupModal) {
-        signupModal.classList.add('hidden');
-    }
-}
-
-if (signupLink) {
-    signupLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        openSignupModal();
-    });
-}
-
-if (createAccountBtn) {
-    createAccountBtn.addEventListener('click', openSignupModal);
-}
-
-if (closeBtn) {
-    closeBtn.addEventListener('click', closeSignupModal);
-}
-
-// Close modal when clicking outside
-window.addEventListener('click', (e) => {
-    if (e.target === signupModal) {
-        closeSignupModal();
-    }
-});
-
-/* ============ SIGNUP FORM HANDLER ============ */
-const signupForm = document.getElementById('signupForm');
-if (signupForm) {
-    signupForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        // Signup functionality will be added here
-    });
-}
-// Configuration
-const API_URL = 'http://localhost:5000/api';
-
-// Dark Mode Toggle
-const themeToggle = document.getElementById('themeToggle');
-const sunIcon = document.getElementById('sunIcon');
-const moonIcon = document.getElementById('moonIcon');
-
-// Check for saved theme preference or default to light mode
-const savedTheme = localStorage.getItem('theme') || 'light';
-if (savedTheme === 'dark') {
-    document.body.classList.add('dark-mode');
-    sunIcon.style.display = 'none';
-    moonIcon.style.display = 'block';
-}
-
-themeToggle.addEventListener('click', () => {
-    document.body.classList.toggle('dark-mode');
-    
-    if (document.body.classList.contains('dark-mode')) {
-        localStorage.setItem('theme', 'dark');
-        sunIcon.style.display = 'none';
-        moonIcon.style.display = 'block';
-    } else {
-        localStorage.setItem('theme', 'light');
-        sunIcon.style.display = 'block';
-        moonIcon.style.display = 'none';
-    }
-});
-
-// DOM Elements
-const loginForm = document.getElementById('loginForm');
-const signupForm = document.getElementById('signupForm');
-const signupModal = document.getElementById('signupModal');
-const signupLink = document.getElementById('signupLink');
-const closeBtn = document.querySelector('.close-btn');
-
-// Event Listeners
-signupLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    openSignupModal();
-});
-
-const createAccountBtn = document.getElementById('createAccountBtn');
-if (createAccountBtn) {
-    createAccountBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        openSignupModal();
-    });
-}
-
-closeBtn.addEventListener('click', closeSignupModal);
-
-window.addEventListener('click', (e) => {
-    if (e.target === signupModal) {
-        closeSignupModal();
-    }
-});
-
-// Login Form Handler
-loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const emailUsername = document.getElementById('emailUsername').value.trim();
-    const password = document.getElementById('password').value;
-    
-    // Clear previous errors
-    document.getElementById('emailError').textContent = '';
-    document.getElementById('passwordError').textContent = '';
-    document.getElementById('formError').textContent = '';
-    
-    // Validation
-    if (!emailUsername) {
-        document.getElementById('emailError').textContent = 'Phone number, username or email is required';
-        return;
-    }
-    
-    if (!password) {
-        document.getElementById('passwordError').textContent = 'Password is required';
-        return;
-    }
-    
-    if (password.length < 6) {
-        document.getElementById('passwordError').textContent = 'Password must be at least 6 characters';
-        return;
-    }
-    
-    // Disable button during submission
-    const submitBtn = loginForm.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Logging in...';
-    
-    try {
-        const response = await fetch(`${API_URL}/auth/login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                emailUsername,
-                password
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            // Store token
-            localStorage.setItem('token', data.token);
-            showToast('Login successful!');
-            
-            // Redirect after 1 second
-            setTimeout(() => {
-                window.location.href = '/dashboard.html'; // Change to your dashboard URL
-            }, 1000);
         } else {
             document.getElementById('formError').textContent = data.message || 'Login failed';
         }
