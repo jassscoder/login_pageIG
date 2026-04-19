@@ -709,7 +709,7 @@ body.dark-mode {
 .signup-form {
     display: flex;
     flex-direction: column;
-    gap: 11px;
+    gap: 13px;
     margin-bottom: 16px;
 }
 
@@ -718,15 +718,17 @@ body.dark-mode {
 }
 
 .signup-form .form-input {
-    font-size: 14px;
-    padding: 11px 12px;
+    font-size: 15px;
+    padding: 13px 14px;
+    height: 44px;
+    border-radius: 11px;
 }
 
 .signup-submit {
     font-size: 15px;
     font-weight: 700;
-    height: 40px;
-    margin-top: 6px;
+    height: 44px;
+    margin-top: 8px;
 }
 
 .signup-terms {
