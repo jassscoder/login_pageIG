@@ -8,6 +8,8 @@ CREATE TABLE users (
     full_name VARCHAR(255) NOT NULL,
     password VARCHAR(255) NOT NULL,
     preferred_theme ENUM('light', 'dark') NOT NULL DEFAULT 'light',
+    preferred_palette ENUM('morning', 'afternoon', 'night') NOT NULL DEFAULT 'morning',
+    intro_animation_enabled TINYINT(1) NOT NULL DEFAULT 1,
     profile_picture VARCHAR(500),
     bio TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

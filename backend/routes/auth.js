@@ -11,6 +11,7 @@ router.post('/login', authController.login);
 router.post('/logout', auth, authController.logout);
 router.get('/me', auth, authController.getMe);
 router.put('/theme', auth, authController.updateTheme);
+router.put('/ui-settings', auth, authController.updateUiSettings);
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/reset-password', authController.resetPassword);
 

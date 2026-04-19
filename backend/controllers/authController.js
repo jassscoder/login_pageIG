@@ -100,7 +100,9 @@ exports.login = async (req, res) => {
                 email: user.email,
                 username: user.username,
                 fullName: user.full_name,
-                preferredTheme: user.preferred_theme || 'light'
+                preferredTheme: user.preferred_theme || 'light',
+                preferredPalette: user.preferred_palette || 'morning',
+                introAnimationEnabled: user.intro_animation_enabled !== 0
             }
         });
     } catch (error) {
@@ -120,7 +122,7 @@ exports.getMe = async (req, res) => {
         const connection = await pool.getConnection();
 
         const [users] = await connection.execute(
-            'SELECT id, email, username, full_name, preferred_theme, created_at FROM users WHERE id = ?',
+            'SELECT id, email, username, full_name, preferred_theme, preferred_palette, intro_animation_enabled, created_at FROM users WHERE id = ?',
             [req.userId]
         );
 
@@ -138,6 +140,8 @@ exports.getMe = async (req, res) => {
                 username: user.username,
                 fullName: user.full_name,
                 preferredTheme: user.preferred_theme || 'light',
+                preferredPalette: user.preferred_palette || 'morning',
+                introAnimationEnabled: user.intro_animation_enabled !== 0,
                 createdAt: user.created_at
             }
         });
@@ -217,5 +221,43 @@ exports.resetPassword = async (req, res) => {
     } catch (error) {
         console.error('Reset password error:', error);
         res.status(500).json({ message: 'Error resetting password' });
+    }
+};
+
+// Update current user's UI preferences
+exports.updateUiSettings = async (req, res) => {
+    try {
+        const { theme, palette, introAnimationEnabled } = req.body;
+
+        const nextTheme = theme || 'light';
+        const nextPalette = palette || 'morning';
+        const nextIntroAnimationEnabled = introAnimationEnabled === false ? 0 : 1;
+
+        if (nextTheme !== 'light' && nextTheme !== 'dark') {
+            return res.status(400).json({ message: 'Theme must be "light" or "dark"' });
+        }
+
+        if (!['morning', 'afternoon', 'night'].includes(nextPalette)) {
+            return res.status(400).json({ message: 'Palette must be morning, afternoon, or night' });
+        }
+
+        const connection = await pool.getConnection();
+        await connection.execute(
+            'UPDATE users SET preferred_theme = ?, preferred_palette = ?, intro_animation_enabled = ? WHERE id = ?',
+            [nextTheme, nextPalette, nextIntroAnimationEnabled, req.userId]
+        );
+        connection.release();
+
+        res.json({
+            message: 'UI settings updated',
+            ui: {
+                preferredTheme: nextTheme,
+                preferredPalette: nextPalette,
+                introAnimationEnabled: nextIntroAnimationEnabled === 1
+            }
+        });
+    } catch (error) {
+        console.error('Update UI settings error:', error);
+        res.status(500).json({ message: 'Failed to update UI settings' });
     }
 };
