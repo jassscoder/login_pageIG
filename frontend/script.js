@@ -248,6 +248,8 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault();
             clearMessages(emailError, passwordError, formError, formSuccess, statusText);
 
+            let hardUnlockTimer = null;
+
             const emailUsername = emailInput ? emailInput.value.trim() : '';
             const password = passwordInput ? passwordInput.value : '';
 
@@ -270,6 +272,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (loginButton) {
                 loginButton.classList.add('loading');
                 loginButton.disabled = true;
+
+                // Final safety net to avoid indefinite loading in edge cases.
+                hardUnlockTimer = window.setTimeout(() => {
+                    loginButton.classList.remove('loading');
+                    loginButton.disabled = false;
+                    showError(formError, 'Request took too long. Please try again.');
+                }, 15000);
             }
 
             try {
@@ -325,6 +334,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     showError(formError, 'Connection error. Please try again.');
                 }
             } finally {
+                if (hardUnlockTimer) {
+                    window.clearTimeout(hardUnlockTimer);
+                }
                 if (loginButton) {
                     loginButton.classList.remove('loading');
                     loginButton.disabled = false;

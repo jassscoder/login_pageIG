@@ -2,6 +2,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../config');
 
+const isMissingColumnError = (error) => error && error.code === 'ER_BAD_FIELD_ERROR';
+
 // Register
 exports.register = async (req, res) => {
     try {
@@ -121,10 +123,22 @@ exports.getMe = async (req, res) => {
     try {
         const connection = await pool.getConnection();
 
-        const [users] = await connection.execute(
-            'SELECT id, email, username, full_name, preferred_theme, preferred_palette, intro_animation_enabled, created_at FROM users WHERE id = ?',
-            [req.userId]
-        );
+        let users;
+        try {
+            [users] = await connection.execute(
+                'SELECT id, email, username, full_name, preferred_theme, preferred_palette, intro_animation_enabled, created_at FROM users WHERE id = ?',
+                [req.userId]
+            );
+        } catch (error) {
+            if (!isMissingColumnError(error)) {
+                throw error;
+            }
+
+            [users] = await connection.execute(
+                'SELECT id, email, username, full_name, preferred_theme, created_at FROM users WHERE id = ?',
+                [req.userId]
+            );
+        }
 
         connection.release();
 
@@ -242,10 +256,22 @@ exports.updateUiSettings = async (req, res) => {
         }
 
         const connection = await pool.getConnection();
-        await connection.execute(
-            'UPDATE users SET preferred_theme = ?, preferred_palette = ?, intro_animation_enabled = ? WHERE id = ?',
-            [nextTheme, nextPalette, nextIntroAnimationEnabled, req.userId]
-        );
+        try {
+            await connection.execute(
+                'UPDATE users SET preferred_theme = ?, preferred_palette = ?, intro_animation_enabled = ? WHERE id = ?',
+                [nextTheme, nextPalette, nextIntroAnimationEnabled, req.userId]
+            );
+        } catch (error) {
+            if (!isMissingColumnError(error)) {
+                throw error;
+            }
+
+            // Older schema fallback: keep login flow healthy even before migrations run.
+            await connection.execute(
+                'UPDATE users SET preferred_theme = ? WHERE id = ?',
+                [nextTheme, req.userId]
+            );
+        }
         connection.release();
 
         res.json({
