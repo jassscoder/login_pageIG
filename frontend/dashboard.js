@@ -90,11 +90,7 @@ async function loadUserData() {
         });
 
         if (!response.ok) {
-            localStorage.removeItem('token');
-            const loginPath = window.location.pathname.includes('/frontend/') 
-                ? '/instagram-login-clone/frontend/'
-                : '/';
-            window.location.href = loginPath;
+            console.warn('Failed to load user data:', response.status);
             return null;
         }
 
@@ -102,6 +98,7 @@ async function loadUserData() {
         return data.user;
     } catch (error) {
         console.error('Error loading user data:', error);
+        // Don't redirect - just continue with sample data
         return null;
     }
 }
@@ -234,10 +231,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // Load user data
+    // Load user data (may be null if API fails, but dashboard still works)
     const user = await loadUserData();
+    
+    // Set user info from API or use defaults
     if (user) {
-        // Set user info
         const userInitial = getUserInitial(user.username);
         document.getElementById('userInitial').textContent = userInitial;
         document.getElementById('profileInitial').textContent = userInitial;
@@ -245,8 +243,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('profileFullName').textContent = user.fullName || 'User';
         document.getElementById('profileEmail').textContent = user.email;
 
-        // Apply theme
+        // Apply saved theme preference
         const savedTheme = user.preferredTheme || localStorage.getItem('theme') || 'light';
+        applyTheme(savedTheme);
+    } else {
+        // Use defaults if API call fails
+        document.getElementById('userInitial').textContent = 'U';
+        document.getElementById('profileInitial').textContent = 'U';
+        document.getElementById('profileUsername').textContent = 'User';
+        document.getElementById('profileFullName').textContent = 'Instagram User';
+        document.getElementById('profileEmail').textContent = 'user@instagram.com';
+        
+        // Apply theme from localStorage
+        const savedTheme = localStorage.getItem('theme') || 'light';
         applyTheme(savedTheme);
     }
 
@@ -269,9 +278,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Logout button
+    // Logout button in sidebar
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', handleLogout);
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleLogout();
+        });
     }
 });
