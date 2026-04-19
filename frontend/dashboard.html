@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram - Feed</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="dashboard-styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="feed-header">
+            <div class="header-content">
+                <h1 class="feed-title">Instagram</h1>
+                <div class="header-actions">
+                    <button class="icon-btn" title="Notifications" aria-label="Notifications">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                    </button>
+                    <button class="icon-btn" title="Messages" aria-label="Messages">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </button>
+                    <button class="profile-btn" id="profileBtn" title="Profile" aria-label="Profile">
+                        <div class="profile-avatar">
+                            <span id="userInitial">U</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <nav class="sidebar-nav">
+                    <a href="#" class="nav-item active">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path>
+                        </svg>
+                        <span>Home</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        <span>Explore</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                        <span>Likes</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        <span>Friends</span>
+                    </a>
+                </nav>
+
+                <button class="logout-btn" id="logoutBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span>Logout</span>
+                </button>
+            </aside>
+
+            <!-- Feed -->
+            <main class="feed-container">
+                <div class="feed-content">
+                    <!-- Stories -->
+                    <div class="stories-section">
+                        <div class="story-item">
+                            <div class="story-avatar">
+                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23FF6B6B'/%3E%3Ctext x='50' y='60' text-anchor='middle' fill='white' font-size='40' font-family='Arial'%3EY%3C/text%3E%3C/svg%3E" alt="Your story">
+                                <button class="add-story">+</button>
+                            </div>
+                            <p>Your story</p>
+                        </div>
+                        <div class="story-item">
+                            <div class="story-avatar">
+                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%234ECDC4'/%3E%3Ctext x='50' y='60' text-anchor='middle' fill='white' font-size='40' font-family='Arial'%3EA%3C/text%3E%3C/svg%3E" alt="alex_smith">
+                            </div>
+                            <p>alex_smith</p>
+                        </div>
+                        <div class="story-item">
+                            <div class="story-avatar">
+                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%2345B7D1'/%3E%3Ctext x='50' y='60' text-anchor='middle' fill='white' font-size='40' font-family='Arial'%3EJ%3C/text%3E%3C/svg%3E" alt="jane_doe">
+                            </div>
+                            <p>jane_doe</p>
+                        </div>
+                        <div class="story-item">
+                            <div class="story-avatar">
+                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23F9D56E'/%3E%3Ctext x='50' y='60' text-anchor='middle' fill='white' font-size='40' font-family='Arial'%3EM%3C/text%3E%3C/svg%3E" alt="mike_johnson">
+                            </div>
+                            <p>mike_johnson</p>
+                        </div>
+                    </div>
+
+                    <!-- Posts Feed -->
+                    <div class="posts-section" id="feedPosts">
+                        <!-- Posts will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Sidebar Right -->
+                <aside class="sidebar-right">
+                    <div class="suggested-users">
+                        <div class="suggested-header">
+                            <h3>Suggested for you</h3>
+                            <a href="#">See all</a>
+                        </div>
+                        <div class="suggested-list">
+                            <div class="suggested-item">
+                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%235F67E7'/%3E%3Ctext x='50' y='60' text-anchor='middle' fill='white' font-size='40' font-family='Arial'%3ES%3C/text%3E%3C/svg%3E" alt="sarah_art">
+                                <div class="suggested-info">
+                                    <p class="username">sarah_art</p>
+                                    <p class="followed-by">Followed by alex_smith</p>
+                                </div>
+                                <button class="follow-btn">Follow</button>
+                            </div>
+                            <div class="suggested-item">
+                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23F24E4E'/%3E%3Ctext x='50' y='60' text-anchor='middle' fill='white' font-size='40' font-family='Arial'%3EP%3C/text%3E%3C/svg%3E" alt="photo_pro">
+                                <div class="suggested-info">
+                                    <p class="username">photo_pro</p>
+                                    <p class="followed-by">Followed by jane_doe</p>
+                                </div>
+                                <button class="follow-btn">Follow</button>
+                            </div>
+                            <div class="suggested-item">
+                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%2349CC90'/%3E%3Ctext x='50' y='60' text-anchor='middle' fill='white' font-size='40' font-family='Arial'%3ET%3C/text%3E%3C/svg%3E" alt="travel_hub">
+                                <div class="suggested-info">
+                                    <p class="username">travel_hub</p>
+                                    <p class="followed-by">Popular</p>
+                                </div>
+                                <button class="follow-btn">Follow</button>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </main>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profileModal" class="modal hidden">
+        <div class="modal-content profile-modal-content">
+            <button class="modal-close" onclick="closeProfileModal()">✕</button>
+            <div class="profile-modal-header">
+                <div class="profile-large-avatar">
+                    <span id="profileInitial">U</span>
+                </div>
+                <div class="profile-info">
+                    <h2 id="profileUsername">username</h2>
+                    <p id="profileFullName">Full Name</p>
+                    <p class="profile-email" id="profileEmail">email@example.com</p>
+                </div>
+            </div>
+            <div class="profile-modal-actions">
+                <button class="edit-profile-btn">Edit Profile</button>
+                <button class="logout-modal-btn" onclick="handleLogout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.js?v=1.0" defer></script>
+</body>
+</html>

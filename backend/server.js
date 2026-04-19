@@ -21,6 +21,9 @@ app.use(express.static(frontendPath));
 app.get('/', (req, res) => {
     res.sendFile(path.join(frontendPath, 'index.html'));
 });
+app.get('/dashboard', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'dashboard.html'));
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {

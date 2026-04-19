@@ -295,8 +295,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 await saveUiSettings();
 
+                // Redirect to dashboard
                 window.setTimeout(() => {
-                    window.location.href = '/dashboard';
+                    const dashboardPath = window.location.pathname.includes('/frontend/') 
+                        ? '/instagram-login-clone/frontend/dashboard.html'
+                        : '/dashboard';
+                    window.location.href = dashboardPath;
                 }, 1100);
             } catch (error) {
                 console.error('Login error:', error);
