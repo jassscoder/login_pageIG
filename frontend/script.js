@@ -328,4 +328,87 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Signup form handler
+    const signupForm = document.getElementById('signupForm');
+    if (signupForm) {
+        signupForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            // Get form values using FormData
+            const formData = new FormData(signupForm);
+            const email = formData.get('email').trim();
+            const fullName = formData.get('fullName').trim();
+            const username = formData.get('username').trim();
+            const password = formData.get('password');
+
+            // Validation
+            if (!email || !fullName || !username || !password) {
+                alert('All fields are required');
+                return;
+            }
+
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                alert('Please enter a valid email address');
+                return;
+            }
+
+            if (username.length < 3) {
+                alert('Username must be at least 3 characters');
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters');
+                return;
+            }
+
+            const signupSubmitBtn = signupForm.querySelector('.signup-submit');
+            if (signupSubmitBtn) {
+                signupSubmitBtn.disabled = true;
+                signupSubmitBtn.textContent = 'Creating account...';
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, fullName, username, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    alert(data.message || 'Signup failed');
+                    return;
+                }
+
+                // Signup successful, show message and clear form
+                alert('Account created successfully! Please log in with your credentials.');
+                signupForm.reset();
+                window.closeSignupModal();
+
+                // Clear login form
+                const loginForm = document.getElementById('loginForm');
+                if (loginForm) {
+                    loginForm.reset();
+                }
+                
+                // Fill in the email for convenience
+                const emailInput = document.getElementById('emailUsername');
+                if (emailInput) {
+                    emailInput.value = email;
+                    emailInput.focus();
+                }
+            } catch (error) {
+                console.error('Signup error:', error);
+                alert('Connection error. Please try again.');
+            } finally {
+                if (signupSubmitBtn) {
+                    signupSubmitBtn.disabled = false;
+                    signupSubmitBtn.textContent = 'Sign up';
+                }
+            }
+        });
+    }
 });
