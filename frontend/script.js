@@ -8,6 +8,20 @@ const getBackendURL = () => {
 
 const API_URL = window.__BACKEND_URL || getBackendURL();
 
+const fetchWithTimeout = async (url, options = {}, timeoutMs = 10000) => {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+        return await fetch(url, {
+            ...options,
+            signal: controller.signal
+        });
+    } finally {
+        window.clearTimeout(timeoutId);
+    }
+};
+
 const PALETTES = {
     morning: {
         a: '#ff8d66',
@@ -159,14 +173,14 @@ const saveUiSettings = async (partialSettings) => {
             ...partialSettings
         };
 
-        await fetch(`${API_URL}/auth/ui-settings`, {
+        await fetchWithTimeout(`${API_URL}/auth/ui-settings`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`
             },
             body: JSON.stringify(payload)
-        });
+        }, 6000);
     } catch (error) {
         console.error('Failed to sync UI settings:', error);
     }
@@ -259,11 +273,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             try {
-                const response = await fetch(`${API_URL}/auth/login`, {
+                const response = await fetchWithTimeout(`${API_URL}/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ emailUsername, password })
-                });
+                }, 12000);
 
                 const data = await response.json();
                 if (!response.ok) {
@@ -293,7 +307,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     formSuccess.classList.add('show');
                 }
 
-                await saveUiSettings();
+                // Do not block login redirect if settings sync is slow/fails.
+                void saveUiSettings();
 
                 // Redirect to dashboard
                 window.setTimeout(() => {
@@ -304,7 +319,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 1100);
             } catch (error) {
                 console.error('Login error:', error);
-                showError(formError, 'Connection error. Please try again.');
+                if (error && error.name === 'AbortError') {
+                    showError(formError, 'Server timeout. Please try again.');
+                } else {
+                    showError(formError, 'Connection error. Please try again.');
+                }
             } finally {
                 if (loginButton) {
                     loginButton.classList.remove('loading');
